@@ -1,0 +1,68 @@
+# Prerequisites
+*.d
+
+# Compiled Object Files
+*.o
+*.ko
+*.obj
+*.elf
+*.slo
+
+# Linker Output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Static Libraries
+*.lib
+*.a
+*.la
+*.lo
+*.lai
+
+# Shared Objects (inc. Windows DLLs), Compiled Dynamic Libraries
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug Files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results, Fortran Module Files
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+*.smod
+
+# OS Generated
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Icon?
+ehthumbs.db
+[Tt]humbs.db
+[Dd]esktop.ini
+
+.vscode/
+.dccache
