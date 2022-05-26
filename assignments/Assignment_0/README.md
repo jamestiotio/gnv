@@ -1,4 +1,6 @@
-# Assignment_0 Setup Tutorial
+# Assignment 0 Setup Tutorial
+
+> James Raphael Tiovalen / 1004555
 
 ## For Mac
 
