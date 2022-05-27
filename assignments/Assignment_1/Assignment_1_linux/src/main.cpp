@@ -13,7 +13,9 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <set>
 #include <fstream>
+#include <bits/stdc++.h>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -92,66 +94,127 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
     }
 
     ifstream fin(filename, ios::in);
-    if (!fin) {
+    if (!fin)
+    {
         return 1;
     }
 
-    cout << "Loading OBJ file: " << filename << "..." << endl;
+    cout << "Loading OBJ file: " << filename << endl;
 
     string lineBuffer;
 
-    vector<float> vertices;
-    vector<float> normals;
+    vector<vector<float>> vertices;
+    vector<vector<float>> normals;
+    set<pair<unsigned, unsigned>> vertex_normal_pairs;
+    unsigned numVertices = 0;
+    unsigned numNormals = 0;
+    unsigned numFaces = 0;
 
-    while (getline(fin, lineBuffer)) {
-        if (lineBuffer.substr(0, 2) == "v ") {
+    while (getline(fin, lineBuffer))
+    {
+        if (lineBuffer.substr(0, 2) == "v ")
+        {
             istringstream v(lineBuffer.substr(2));
             float x, y, z;
-            v >> x;
-            v >> y;
-            v >> z;
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
+            v >> x >> y >> z;
+            vector<float> vertex = {x, y, z};
+            vertices.push_back(vertex);
+            numVertices++;
         }
-        else if (lineBuffer.substr(0, 2) == "vn") {
+        else if (lineBuffer.substr(0, 2) == "vn")
+        {
             istringstream vn(lineBuffer.substr(2));
             float x, y, z;
-            vn >> x;
-            vn >> y;
-            vn >> z;
-            normals.push_back(x);
-            normals.push_back(y);
-            normals.push_back(z);
+            vn >> x >> y >> z;
+            // Normalize the normal vectors
+            float length = sqrt(x * x + y * y + z * z);
+            x /= length;
+            y /= length;
+            z /= length;
+            vector<float> normal = {x, y, z};
+            normals.push_back(normal);
+            numNormals++;
         }
-        else if (lineBuffer.substr(0, 2) == "f ") {
+        else if (lineBuffer.substr(0, 2) == "f ")
+        {
             unsigned int v1, v2, v3;
             unsigned int t1, t2, t3;
             unsigned int n1, n2, n3;
             const char *face = lineBuffer.c_str();
             int match = sscanf(face, "f %i/%i/%i %i/%i/%i %i/%i/%i", &v1, &t1, &n1,
-                            &v2, &t2, &n2, &v3, &t3, &n3);
-            if (match != 9) cout << "Failed to parse the faces in the OBJ file." << endl;
+                               &v2, &t2, &n2, &v3, &t3, &n3);
+            if (match != 9)
+                cout << "Invalid face element line detected in the OBJ file. Aborting..." << endl;
+            if (v1 <= 0 || v2 <= 0 || v3 <= 0 || n1 <= 0 || n2 <= 0 || n3 <= 0)
+            {
+                cout << "Invalid vertex or normal index found in the OBJ file. Aborting..." << endl;
+                return 1;
+            }
             triList.push_back(v1 - 1);
-            // triList.push_back(t1);
-            // triList.push_back(n1);
             triList.push_back(v2 - 1);
-            // triList.push_back(t2);
-            // triList.push_back(n2);
             triList.push_back(v3 - 1);
-            // triList.push_back(t3);
-            // triList.push_back(n3);
+
+            pair<unsigned, unsigned> vertex_normal_pair1 = make_pair(v1 - 1, n1 - 1);
+            pair<unsigned, unsigned> vertex_normal_pair2 = make_pair(v2 - 1, n2 - 1);
+            pair<unsigned, unsigned> vertex_normal_pair3 = make_pair(v3 - 1, n3 - 1);
+
+            // Add the vertex-normal pair only if it is not in the list yet
+            if (vertex_normal_pairs.find(vertex_normal_pair1) == vertex_normal_pairs.end())
+            {
+                vertex_normal_pairs.insert(vertex_normal_pair1);
+            }
+
+            if (vertex_normal_pairs.find(vertex_normal_pair2) == vertex_normal_pairs.end())
+            {
+                vertex_normal_pairs.insert(vertex_normal_pair2);
+            }
+
+            if (vertex_normal_pairs.find(vertex_normal_pair3) == vertex_normal_pairs.end())
+            {
+                vertex_normal_pairs.insert(vertex_normal_pair3);
+            }
+
+            numFaces++;
         }
     }
 
-    // Zip vertices and normals together and store in verList
-    for (int i = 0; i < vertices.size(); i += 3) {
-        verList.push_back(vertices[i]);
-        verList.push_back(vertices[i + 1]);
-        verList.push_back(vertices[i + 2]);
-        verList.push_back(normals[i]);
-        verList.push_back(normals[i + 1]);
-        verList.push_back(normals[i + 2]);
+    // Check that there are no duplicate vertex indices in the vertex-normal pairs
+    if (vertex_normal_pairs.size() != numVertices)
+    {
+        cout << "Contradicting vertex-normal pair information found in the OBJ file! Aborting..." << endl;
+        return 1;
+    }
+
+    // Print number of vertices, normals, and faces
+    cout << "Number of vertices: " << numVertices << endl;
+    cout << "Number of normals: " << numNormals << endl;
+    cout << "Number of faces: " << numFaces << endl;
+
+    // Sort the vertex-normal pairs in ascending order based on the vertex index (first element of the pair)
+    vector<pair<unsigned, unsigned>> vertex_normal_pairs_sorted(vertex_normal_pairs.begin(), vertex_normal_pairs.end());
+    sort(vertex_normal_pairs_sorted.begin(), vertex_normal_pairs_sorted.end(),
+         [](const pair<unsigned, unsigned> &a, const pair<unsigned, unsigned> &b)
+         {
+             return a.first < b.first;
+         });
+
+    // Add all vertex-normal pairs based on their indices and push to verList
+    for (auto vertex_normal_pair : vertex_normal_pairs_sorted)
+    {
+        unsigned vertex_index = vertex_normal_pair.first;
+        unsigned normal_index = vertex_normal_pair.second;
+        float x = vertices[vertex_index][0];
+        float y = vertices[vertex_index][1];
+        float z = vertices[vertex_index][2];
+        float nx = normals[normal_index][0];
+        float ny = normals[normal_index][1];
+        float nz = normals[normal_index][2];
+        verList.push_back(x);
+        verList.push_back(y);
+        verList.push_back(z);
+        verList.push_back(nx);
+        verList.push_back(ny);
+        verList.push_back(nz);
     }
 
     // Close the file
@@ -164,7 +227,8 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
 void SetMeshColor(int &colorID)
 {
     // Set the meshColor using the colorTable and current colorID
-    for (int i = 0; i < sizeof(meshColor) / sizeof(meshColor[0]); i++) {
+    for (int i = 0; i < sizeof(meshColor) / sizeof(meshColor[0]); i++)
+    {
         meshColor[i] = colorTable[colorID][i];
     }
 
@@ -184,12 +248,6 @@ void TranslateModel(glm::vec3 transVec)
 {
     // Translate the modelMatrix by transVec
     modelMatrix = glm::translate(modelMatrix, transVec);
-
-    // Update the camera position
-    camera_position += transVec;
-
-    // Update the camera up vector
-    camera_up = glm::normalize(camera_up);
 }
 
 // TODO: insert your code in this function for Mesh Transformation (Scaling)
@@ -323,7 +381,9 @@ int main(int argc, char **argv)
     if (argc > 1)
     {
         filename = argv[1];
-    } else {
+    }
+    else
+    {
         cout << "Please input a filename!" << endl;
         return 1;
     }
@@ -381,8 +441,9 @@ int main(int argc, char **argv)
     vector<unsigned> triList; // This is the list of faces for rendering
     int status = LoadInput(verList, triList, filename);
 
-    if (status == 1) {
-        cout << "Unable to load file. Please check again." << endl;
+    if (status == 1)
+    {
+        cout << "Unable to load the specified file. Please check again that everything is in proper order." << endl;
         return 1;
     }
 
