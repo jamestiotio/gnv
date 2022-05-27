@@ -179,10 +179,14 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
     }
 
     // Check that there are no duplicate vertex indices in the vertex-normal pairs
-    if (vertex_normal_pairs.size() != numVertices)
+    if (vertex_normal_pairs.size() > numVertices)
     {
         cout << "Contradicting vertex-normal pair information found in the OBJ file! Aborting..." << endl;
         return 1;
+    }
+    if (vertex_normal_pairs.size() < numVertices)
+    {
+        cout << "Note that the OBJ file contains some vertices without corresponding normal vectors that are not used." << endl;
     }
 
     // Print number of vertices, normals, and faces
