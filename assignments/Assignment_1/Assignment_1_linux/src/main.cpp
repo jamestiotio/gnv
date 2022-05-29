@@ -105,10 +105,11 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
 
     vector<vector<float>> vertices;
     vector<vector<float>> normals;
-    set<pair<unsigned, unsigned>> vertex_normal_pairs;
+    set<pair<unsigned, int>> vertex_normal_pairs;
     unsigned numVertices = 0;
     unsigned numNormals = 0;
     unsigned numFaces = 0;
+    bool hasVertexTexture = false;
 
     while (getline(fin, lineBuffer))
     {
@@ -154,9 +155,9 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
             triList.push_back(v2 - 1);
             triList.push_back(v3 - 1);
 
-            pair<unsigned, unsigned> vertex_normal_pair1 = make_pair(v1 - 1, n1 - 1);
-            pair<unsigned, unsigned> vertex_normal_pair2 = make_pair(v2 - 1, n2 - 1);
-            pair<unsigned, unsigned> vertex_normal_pair3 = make_pair(v3 - 1, n3 - 1);
+            pair<unsigned, int> vertex_normal_pair1 = make_pair(v1 - 1, n1 - 1);
+            pair<unsigned, int> vertex_normal_pair2 = make_pair(v2 - 1, n2 - 1);
+            pair<unsigned, int> vertex_normal_pair3 = make_pair(v3 - 1, n3 - 1);
 
             // Add the vertex-normal pair only if it is not in the list yet
             if (vertex_normal_pairs.find(vertex_normal_pair1) == vertex_normal_pairs.end())
@@ -176,6 +177,11 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
 
             numFaces++;
         }
+        else if (lineBuffer.substr(0, 2) == "vt" && !hasVertexTexture)
+        {
+            hasVertexTexture = true;
+            cout << "Vertex texture commands detected in the OBJ file. This application will ignore these as it does not support vertex textures at the moment." << endl;
+        }
     }
 
     // Check that there are no duplicate vertex indices in the vertex-normal pairs
@@ -186,7 +192,7 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
     }
     if (vertex_normal_pairs.size() < numVertices)
     {
-        cout << "Note that the OBJ file contains some vertices without corresponding normal vectors that are not used." << endl;
+        cout << "Note that the OBJ file contains " << numVertices - vertex_normal_pairs.size() << " vertices without corresponding normal vectors that are not used. Fake normals will be associated to these unused vertices." << endl;
     }
 
     // Print number of vertices, normals, and faces
@@ -195,24 +201,55 @@ int LoadInput(vector<float> &verList, vector<unsigned> &triList, string filename
     cout << "Number of faces: " << numFaces << endl;
 
     // Sort the vertex-normal pairs in ascending order based on the vertex index (first element of the pair)
-    vector<pair<unsigned, unsigned>> vertex_normal_pairs_sorted(vertex_normal_pairs.begin(), vertex_normal_pairs.end());
+    vector<pair<unsigned, int>> vertex_normal_pairs_sorted(vertex_normal_pairs.begin(), vertex_normal_pairs.end());
     sort(vertex_normal_pairs_sorted.begin(), vertex_normal_pairs_sorted.end(),
-         [](const pair<unsigned, unsigned> &a, const pair<unsigned, unsigned> &b)
+         [](const pair<unsigned, int> &a, const pair<unsigned, int> &b)
          {
              return a.first < b.first;
          });
+
+    for (unsigned counter = 0; counter < numVertices; counter++)
+    {
+        pair<unsigned, int> vertex_normal_pair = vertex_normal_pairs_sorted[counter];
+        // Check if the normal index is valid
+        if (vertex_normal_pair.second >= numNormals)
+        {
+            cout << "Invalid normal index found in the OBJ file. Aborting..." << endl;
+            return 1;
+        }
+        // Insert a fake normal index placeholder for vertices that do not have corresponding normal vectors
+        if (vertex_normal_pair.first != counter)
+        {
+            pair<unsigned, int> fake_pair = make_pair(counter, -1);
+            vertex_normal_pairs_sorted.insert(vertex_normal_pairs_sorted.begin() + counter, fake_pair);
+        }
+    }
 
     // Add all vertex-normal pairs based on their indices and push to verList
     for (auto vertex_normal_pair : vertex_normal_pairs_sorted)
     {
         unsigned vertex_index = vertex_normal_pair.first;
-        unsigned normal_index = vertex_normal_pair.second;
+        int normal_index = vertex_normal_pair.second;
         float x = vertices[vertex_index][0];
         float y = vertices[vertex_index][1];
         float z = vertices[vertex_index][2];
-        float nx = normals[normal_index][0];
-        float ny = normals[normal_index][1];
-        float nz = normals[normal_index][2];
+        float nx;
+        float ny;
+        float nz;
+        if (normal_index < 0)
+        {
+            // If the normal index is negative, then the vertex does not have a corresponding normal vector
+            // In this case, we will use the fake normal vector (1, 0, 0)
+            nx = 1.0f;
+            ny = 0.0f;
+            nz = 0.0f;
+        }
+        else
+        {
+            nx = normals[normal_index][0];
+            ny = normals[normal_index][1];
+            nz = normals[normal_index][2];
+        }
         verList.push_back(x);
         verList.push_back(y);
         verList.push_back(z);
