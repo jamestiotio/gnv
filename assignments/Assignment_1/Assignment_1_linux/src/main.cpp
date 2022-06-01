@@ -280,22 +280,25 @@ void SetMeshColor(int &colorID)
 // TODO: insert your code in this function for Mesh Transformation (Rotation)
 void RotateModel(float angle, glm::vec3 axis)
 {
-    // Rotate the modelMatrix by angle around axis
-    modelMatrix = glm::rotate(modelMatrix, angle, axis);
+    // Rotate the modelMatrix by angle around axis with respect to the world space
+    glm::mat4 rotationMatrix = glm::rotate(modelMatrix, angle, axis);
+    modelMatrix = glm::inverse(modelMatrix) * rotationMatrix * modelMatrix;
 }
 
 // TODO: insert your code in this function for Mesh Transformation (Translation)
 void TranslateModel(glm::vec3 transVec)
 {
-    // Translate the modelMatrix by transVec
-    modelMatrix = glm::translate(modelMatrix, transVec);
+    // Translate the modelMatrix by transVec with respect to the world space
+    glm::mat4 translationMatrix = glm::translate(modelMatrix, transVec);
+    modelMatrix = glm::inverse(modelMatrix) * translationMatrix * modelMatrix;
 }
 
 // TODO: insert your code in this function for Mesh Transformation (Scaling)
 void ScaleModel(float scale)
 {
-    // Scale the modelMatrix by scale
-    modelMatrix = glm::scale(modelMatrix, glm::vec3(scale, scale, scale));
+    // Scale the modelMatrix by scale with respect to the world space
+    glm::mat4 scalingMatrix = glm::scale(modelMatrix, glm::vec3(scale, scale, scale));
+    modelMatrix = glm::inverse(modelMatrix) * scalingMatrix * modelMatrix;
 }
 
 /******************************************************************************/
