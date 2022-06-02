@@ -84,3 +84,4 @@ make
 `sphere.obj`:
 
 ![mesh_transformation_sphere](./assets/mesh_transformation/mesh_transformation_sphere.gif)
+
