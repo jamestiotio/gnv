@@ -126,7 +126,7 @@ The three mesh transformations implemented in this program are:
 - Translation
 - Scaling
 
-The implementation would multiply the corresponding transformation matrix with the inverse of the model matrix in order to perform the transformation relative to the model frame.
+Translation would be performed relative to the world space axes. Meanwhile, rotation and scaling would be performed with respect to and around the object center (not the origin).
 
 
 

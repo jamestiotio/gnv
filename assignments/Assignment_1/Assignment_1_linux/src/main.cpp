@@ -280,25 +280,28 @@ void SetMeshColor(int &colorID)
 // TODO: insert your code in this function for Mesh Transformation (Rotation)
 void RotateModel(float angle, glm::vec3 axis)
 {
-    // Rotate the modelMatrix by angle around axis with respect to the world space
-    glm::mat4 rotationMatrix = glm::rotate(modelMatrix, angle, axis);
-    modelMatrix = glm::inverse(modelMatrix) * rotationMatrix * modelMatrix;
+    // Get the current object's translation vector
+    glm::vec3 translationVector = glm::vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
+    // Temporarily translate the modelMatrix to the origin
+    glm::mat4 originModel = glm::translate(glm::mat4(1.0f), -translationVector) * modelMatrix;
+    // Rotate the modelMatrix by angle around axis with respect to the object's center
+    glm::mat4 rotatedModel = glm::rotate(glm::mat4(1.0f), angle, axis) * originModel;
+    // Translate the modelMatrix back to its original position
+    modelMatrix = glm::translate(glm::mat4(1.0f), translationVector) * rotatedModel;
 }
 
 // TODO: insert your code in this function for Mesh Transformation (Translation)
 void TranslateModel(glm::vec3 transVec)
 {
-    // Translate the modelMatrix by transVec with respect to the world space
-    glm::mat4 translationMatrix = glm::translate(modelMatrix, transVec);
-    modelMatrix = glm::inverse(modelMatrix) * translationMatrix * modelMatrix;
+    // Translate the modelMatrix by transVec with respect to the world space axes
+    modelMatrix = glm::translate(glm::mat4(1.0f), transVec) * modelMatrix;
 }
 
 // TODO: insert your code in this function for Mesh Transformation (Scaling)
 void ScaleModel(float scale)
 {
-    // Scale the modelMatrix by scale with respect to the world space
-    glm::mat4 scalingMatrix = glm::scale(modelMatrix, glm::vec3(scale, scale, scale));
-    modelMatrix = glm::inverse(modelMatrix) * scalingMatrix * modelMatrix;
+    // Scale the modelMatrix by scale around the object's center
+    modelMatrix = glm::scale(modelMatrix, glm::vec3(scale, scale, scale));
 }
 
 /******************************************************************************/
