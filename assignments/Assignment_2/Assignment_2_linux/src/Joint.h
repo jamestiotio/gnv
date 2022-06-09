@@ -7,8 +7,8 @@
 
 struct Joint
 {
-	glm::mat4 transform; // transform relative to its parent
-	std::vector< Joint* > children; // list of children
+	glm::mat4 transform;		   // transform relative to its parent
+	std::vector<Joint *> children; // list of children
 };
 
 #endif

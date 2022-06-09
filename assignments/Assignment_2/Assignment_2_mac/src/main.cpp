@@ -263,7 +263,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         if (chosenIndex >= 0 && chosenIndex < myModel.jointMatList.size())
         {
             float jointRotateAngle[3];
-            cout << "choose rotation angle for x, y,z axis, range: [-180, 180] (example: 90, 90, 120)" << endl;
+            cout << "choose rotation angle for x, y, z axis, range: [-180, 180] (example: 90, 90, 120)" << endl;
             cout << "input the rotation angle for X axis:" << endl;
             cin >> jointRotateAngle[0];
             cout << "input the rotation angle for Y axis:" << endl;

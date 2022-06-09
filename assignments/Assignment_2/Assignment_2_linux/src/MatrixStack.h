@@ -10,13 +10,11 @@ public:
 	MatrixStack();
 	void clear();
 	glm::mat4 top();
-	void push( const glm::mat4& m );
+	void push(const glm::mat4 &m);
 	void pop();
 
 private:
-
-	std::vector< glm::mat4 > m_matrices;
-
+	std::vector<glm::mat4> m_matrices;
 };
 
 #endif // MATRIX_STACK_H
