@@ -373,7 +373,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, "Assignment 2 - Hierarchical Skeleton", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, "[James Raphael Tiovalen] Assignment 2 - Hierarchical Skeleton", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
