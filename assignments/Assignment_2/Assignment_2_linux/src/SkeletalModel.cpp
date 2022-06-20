@@ -34,6 +34,7 @@ void SkeletalModel::loadSkeleton(const char *filename)
     cout << "Loading model skeleton file: " << filenameStr << endl;
 
     string lineBuffer;
+    int numberOfJoints = 0;
 
     while (getline(fin, lineBuffer))
     {
@@ -74,11 +75,12 @@ void SkeletalModel::loadSkeleton(const char *filename)
 
         // Push the current joint instance to the skeletal model joints vector
         m_joints.push_back(joint);
+        numberOfJoints++;
     }
 
     // Close the file
     fin.close();
-    cout << "Done loading the SKEL file." << endl;
+    cout << "Done loading the SKEL file. Number of joints: " << numberOfJoints << endl;
 
     return;
 }
@@ -113,14 +115,14 @@ void SkeletalModel::computeJointTransforms(Joint *joint, MatrixStack matrixStack
     // Add the current joint's transformation matrix to the matrix stack
     matrixStack.push(glm::transpose(joint->transform));
 
-    // Push the top of the matrix stack to jointMatList
-    jointMatList.push_back(matrixStack.top());
-
     // Recursive call for each child joint
     for (Joint *j : joint->children)
     {
         computeJointTransforms(j, matrixStack);
     }
+
+    // Push the top of the matrix stack to jointMatList
+    jointMatList.push_back(matrixStack.top());
 
     // Pop the current joint's transformation matrix from the matrix stack
     matrixStack.pop();
@@ -143,18 +145,19 @@ void SkeletalModel::computeBoneTransforms(Joint *joint, MatrixStack matrixStack)
     matrixStack.push(glm::transpose(joint->transform));
 
     // Translate in the Z direction
-    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0.5));
+    glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0.5f));
 
     for (Joint *j : joint->children)
     {
         glm::vec3 childVec = glm::vec3(j->transform[3]);
 
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.01, 0.01, glm::length(childVec)));
+        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(0.01f, 0.01f, glm::length(childVec)));
 
         glm::vec3 z = glm::normalize(childVec);
         glm::vec3 y = glm::normalize(glm::cross(z, glm::vec3(0, 0, 1)));
         glm::vec3 x = glm::normalize(glm::cross(y, z));
-        glm::mat4 alignMatrix = glm::mat4(glm::vec4(x, 0), glm::vec4(y, 0), glm::vec4(z, 0), glm::vec4(0, 0, 0, 1));
+        glm::mat3 rotation(x, y, z);
+        glm::mat4 alignMatrix = glm::mat4(rotation);
         glm::mat4 drawBoxTransMatrix = alignMatrix * scaleMatrix * translationMatrix;
 
         // Push the drawBoxTransMatrix into the matrix stack
