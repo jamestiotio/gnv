@@ -133,7 +133,7 @@ struct Vertex
     // Vertex Normal
     Vector   n;
 
-    // Vertex TextureCorrdinate
+    // Vertex TextureCoordinate
     TexCoord t;
 
     // Vertex Color 
@@ -351,8 +351,5 @@ void transpose(Matrix result, Matrix m)
 			result[i*4+j] = m[j*4+i];
 		}
 }
-
-
-
 
 #endif

@@ -32,31 +32,27 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
-
 using namespace std;
 
+#define MAX_BUFFER_SIZE 1024
 
-#define MAX_BUFFER_SIZE            1024
+#define _ROTATE_FACTOR 0.005f
+#define _SCALE_FACTOR 0.01f
+#define _TRANS_FACTOR 0.02f
 
-#define _ROTATE_FACTOR              0.005f
-#define _SCALE_FACTOR               0.01f
-#define _TRANS_FACTOR               0.02f
-
-#define _Z_NEAR                     0.001f
-#define _Z_FAR                      100.0f
-
+#define _Z_NEAR 0.001f
+#define _Z_FAR 100.0f
 
 /***********************************************************************/
 /**************************   global variables   ***********************/
 /***********************************************************************/
 
 // Window size
-unsigned int winWidth  = 800;
+unsigned int winWidth = 800;
 unsigned int winHeight = 600;
 
 // Camera
-glm::vec3 camera_position = glm::vec3 (0.0f, 0.0f, 3.0f);
+glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
 float camera_fovy = 45.0f;
@@ -70,58 +66,78 @@ float prevMouseY;
 glm::mat4 modelMatrix = glm::mat4(1.0f);
 
 // Vectors to save mesh data
-vector<float> render_ver_nor_tex;       // List of points and normals for rendering
-vector<unsigned> render_f;              // List of faces for rendering
+vector<float> render_ver_nor_tex; // List of points and normals for rendering
+vector<unsigned> render_f;        // List of faces for rendering
 
-//main data for rendering
+// main data for rendering
 Object myObject;
 
 // render
-unsigned int VBO, VAO,EBO;
-
+unsigned int VBO, VAO, EBO;
 
 // declaration
 void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-
-
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 ///=========================================================================================///
-///                    Functions to be filled in for Assignment 3    
-///          IMPORTANT: you ONLY need to work on these functions in this section      
+///                    Functions to be filled in for Assignment 3
+///          IMPORTANT: you ONLY need to work on these functions in this section
 ///=========================================================================================///
-
 
 //// TODO: fill this function to realize plane mapping
 void calcPlaneMapping(void)
 {
-  
-}
+    // calculate planar mapping
+    // loop over all vertices and update myObject.vertices[i].t
+    for (int i = 0; i < myObject.vertices.size(); i++) {
+        float x = myObject.vertices.at(i).v[0];
+        float y = myObject.vertices.at(i).v[1];
 
+        myObject.vertices.at(i).t[0] = x + 0.5;
+        myObject.vertices.at(i).t[1] = y + 0.5;
+    }
+}
 
 //// TODO: fill this function to realize cylindrical mapping
 void calcCylindricalMapping(void)
-{ 
+{
+    // calculate cylindrical mapping
+    // loop over all vertices and update myObject.vertices[i].t
+    for (int i = 0; i < myObject.vertices.size(); i++) {
+        float x = myObject.vertices.at(i).v[0];
+        float y = myObject.vertices.at(i).v[1];
+        float z = myObject.vertices.at(i).v[2];
+        float angle = atan2f(z, x);
 
+        myObject.vertices.at(i).t[0] = (angle + PI) / (2 * PI);
+        myObject.vertices.at(i).t[1] = y + 0.5;
+    }
 }
-
 
 //// TODO: fill this function to realize sphere mapping
 void calcSphereMapping(void)
 {
-   
+    // calculate spherical mapping
+    // loop over all vertices and update myObject.vertices[i].t
+    for (int i = 0; i < myObject.vertices.size(); i++) {
+        float x = myObject.vertices.at(i).v[0];
+        float y = myObject.vertices.at(i).v[1];
+        float z = myObject.vertices.at(i).v[2];
+        float rho = sqrtf(powf(x, 2) + powf(y, 2) + powf(z, 2));
+        float theta = atan2f(z, x);
+        float phi = acosf(y / rho);
+
+        myObject.vertices.at(i).t[0] = (theta + PI) / (2 * PI);
+        myObject.vertices.at(i).t[1] = phi / PI;
+    }
 }
 
-
-
-
 ///=========================================================================================///
-///                            Functions to Load and Render a 3D Model 
+///                            Functions to Load and Render a 3D Model
 ///=========================================================================================///
 
 //// scale the model to the same size
@@ -131,23 +147,29 @@ void scaleToUnitBox(void)
     Point minP;
 
     maxP[0] = maxP[1] = maxP[2] = -1e35;
-    minP[0] = minP[1] = minP[2] =  1e35;
+    minP[0] = minP[1] = minP[2] = 1e35;
 
     Vector vBoxSize;
-    Point  bboxCenterP;
+    Point bboxCenterP;
 
     for (unsigned int i = 0; i < myObject.vertices.size(); i++)
     {
-        Vertex& v = myObject.vertices[i];
+        Vertex &v = myObject.vertices[i];
 
-        if (v.v[0] < minP[0])     minP[0] = v.v[0];
-        if (v.v[1] < minP[1])     minP[1] = v.v[1];
+        if (v.v[0] < minP[0])
+            minP[0] = v.v[0];
+        if (v.v[1] < minP[1])
+            minP[1] = v.v[1];
 
-        if (v.v[2] < minP[2])     minP[2] = v.v[2];
-        if (v.v[0] > maxP[0])     maxP[0] = v.v[0];
+        if (v.v[2] < minP[2])
+            minP[2] = v.v[2];
+        if (v.v[0] > maxP[0])
+            maxP[0] = v.v[0];
 
-        if (v.v[1] > maxP[1])     maxP[1] = v.v[1];
-        if (v.v[2] > maxP[2])     maxP[2] = v.v[2];
+        if (v.v[1] > maxP[1])
+            maxP[1] = v.v[1];
+        if (v.v[2] > maxP[2])
+            maxP[2] = v.v[2];
     }
 
     subPnt(vBoxSize, maxP, minP);
@@ -158,7 +180,7 @@ void scaleToUnitBox(void)
 
     for (unsigned int i = 0; i < myObject.vertices.size(); i++)
     {
-        Vertex& v = myObject.vertices[i];
+        Vertex &v = myObject.vertices[i];
 
         v.v[0] = (v.v[0] - bboxCenterP[0]) * modelScale;
         v.v[1] = (v.v[1] - bboxCenterP[1]) * modelScale;
@@ -186,10 +208,10 @@ int LoadInput()
     // Input file name
     string inputString;
 
-    //taking from standard input
+    // taking from standard input
     cout << "Please enter filename.obj: ";
     cin >> inputString;
-    cout << "Displaying: " << inputString <<endl;
+    cout << "Displaying: " << inputString << endl;
 
     ifstream myfile(inputString);
 
@@ -199,47 +221,49 @@ int LoadInput()
         return 1;
     }
 
-
     /////////////////////////////////////////////////////
     // 2. Read data from the input file
 
-    vector<glm::vec3> vecv;         // This is the list of points (3D vectors)
-    vector<glm::vec3> vecn;         // This is the list of normals (also 3D vectors)
-    vector<glm::vec3> vect;         // This is the list of texture coordinates (optional)
-    vector<vector<unsigned>> vecf;  // This is the list of faces (indices into vecv and vecn)
+    vector<glm::vec3> vecv;        // This is the list of points (3D vectors)
+    vector<glm::vec3> vecn;        // This is the list of normals (also 3D vectors)
+    vector<glm::vec3> vect;        // This is the list of texture coordinates (optional)
+    vector<vector<unsigned>> vecf; // This is the list of faces (indices into vecv and vecn)
 
     glm::vec3 v;
     string s;
     char buffer[MAX_BUFFER_SIZE];
 
     // load the OBJ file here
-    //writing to vecv, vecn, and vecf
+    // writing to vecv, vecn, and vecf
 
-    cout << "obj file is open"<<endl;
-    while ( myfile.getline(buffer, MAX_BUFFER_SIZE) )
+    cout << "obj file is open" << endl;
+    while (myfile.getline(buffer, MAX_BUFFER_SIZE))
     {
         stringstream ss(buffer);
 
         ss >> s;
 
-        //printf("%s\n", s.c_str());
+        // printf("%s\n", s.c_str());
 
-        if (s == "v"){
+        if (s == "v")
+        {
             ss >> v[0] >> v[1] >> v[2];
 
-            vecv.push_back(glm::vec3 (v[0],v[1],v[2]));
+            vecv.push_back(glm::vec3(v[0], v[1], v[2]));
         }
-        else if (s == "vn"){
+        else if (s == "vn")
+        {
             ss >> v[0] >> v[1] >> v[2];
 
-            vecn.push_back(glm::vec3 (v[0],v[1],v[2]));
+            vecn.push_back(glm::vec3(v[0], v[1], v[2]));
         }
-        else if (s == "vt"){
+        else if (s == "vt")
+        {
             ss >> v[0] >> v[1] >> v[2];
-            vect.push_back(glm::vec3 (v[0],v[1],v[2]));
-
+            vect.push_back(glm::vec3(v[0], v[1], v[2]));
         }
-        else if (s == "f"){
+        else if (s == "f")
+        {
             string abc;
             string def;
             string ghi;
@@ -247,7 +271,8 @@ int LoadInput()
             vector<unsigned> vu;
             int counter = 0;
 
-            while (counter < 3){
+            while (counter < 3)
+            {
                 ss >> abc;
 
                 char charArray1[1024];
@@ -255,24 +280,24 @@ int LoadInput()
                 charArray1[sizeof(charArray1) - 1] = 0;
 
                 char *result = strtok(charArray1, "/");
-                while (result != NULL){
+                while (result != NULL)
+                {
                     int number = atoi(result);
                     vu.push_back(number);
-                    result = strtok (NULL, "/");
+                    result = strtok(NULL, "/");
                 }
-                counter ++;
+                counter++;
             }
 
             vecf.push_back(vu);
-
         }
     }
     myfile.close();
 
-    //checking and transfer
-    cout<<"number of vertexes " <<vecv.size()<<endl;
-    cout<<"number of normals " <<vecn.size()<<endl;
-    cout<<"number of triangle faces " <<vecf.size()<<endl;
+    // checking and transfer
+    cout << "number of vertexes " << vecv.size() << endl;
+    cout << "number of normals " << vecn.size() << endl;
+    cout << "number of triangle faces " << vecf.size() << endl;
 
     vector<glm::vec3> vecn_reorder; // same order as the vecv
     vector<glm::vec3> vecf_reorder;
@@ -283,37 +308,37 @@ int LoadInput()
     for (int i = 0; i < vecf.size(); ++i)
     {
         // Case 1: input file contains vertex positions, normals, and texture coordinates
-        if (vecf[i].size() == 9 )
+        if (vecf[i].size() == 9)
         {
-            vecf_reorder[i][0] = vecf[i][0]-1;
-            vecf_reorder[i][1] = vecf[i][3]-1;
-            vecf_reorder[i][2] = vecf[i][6]-1;
+            vecf_reorder[i][0] = vecf[i][0] - 1;
+            vecf_reorder[i][1] = vecf[i][3] - 1;
+            vecf_reorder[i][2] = vecf[i][6] - 1;
 
-            vecn_reorder[vecf[i][0]-1] = vecn[vecf[i][2]-1];
-            vecn_reorder[vecf[i][3]-1] = vecn[vecf[i][5]-1];
-            vecn_reorder[vecf[i][6]-1] = vecn[vecf[i][8]-1];
+            vecn_reorder[vecf[i][0] - 1] = vecn[vecf[i][2] - 1];
+            vecn_reorder[vecf[i][3] - 1] = vecn[vecf[i][5] - 1];
+            vecn_reorder[vecf[i][6] - 1] = vecn[vecf[i][8] - 1];
         }
-            // Case 2: input file contains vertex positions and normals
-        else if (vecf[i].size() == 6 )
+        // Case 2: input file contains vertex positions and normals
+        else if (vecf[i].size() == 6)
         {
-            vecf_reorder[i][0] = vecf[i][0]-1;
-            vecf_reorder[i][1] = vecf[i][2]-1;
-            vecf_reorder[i][2] = vecf[i][4]-1;
+            vecf_reorder[i][0] = vecf[i][0] - 1;
+            vecf_reorder[i][1] = vecf[i][2] - 1;
+            vecf_reorder[i][2] = vecf[i][4] - 1;
 
-            vecn_reorder[vecf[i][0]-1] = vecn[vecf[i][1]-1];
-            vecn_reorder[vecf[i][2]-1] = vecn[vecf[i][3]-1];
-            vecn_reorder[vecf[i][4]-1] = vecn[vecf[i][5]-1];
+            vecn_reorder[vecf[i][0] - 1] = vecn[vecf[i][1] - 1];
+            vecn_reorder[vecf[i][2] - 1] = vecn[vecf[i][3] - 1];
+            vecn_reorder[vecf[i][4] - 1] = vecn[vecf[i][5] - 1];
         }
-            // Case 3: input file contains vertex positions only
-        else if (vecf[i].size() == 3 )
+        // Case 3: input file contains vertex positions only
+        else if (vecf[i].size() == 3)
         {
-            vecf_reorder[i][0] = vecf[i][0]-1;
-            vecf_reorder[i][1] = vecf[i][1]-1;
-            vecf_reorder[i][2] = vecf[i][2]-1;
+            vecf_reorder[i][0] = vecf[i][0] - 1;
+            vecf_reorder[i][1] = vecf[i][1] - 1;
+            vecf_reorder[i][2] = vecf[i][2] - 1;
         }
         else
         {
-            cout<<"obj format error"<<endl;
+            cout << "obj format error" << endl;
         }
     }
 
@@ -334,7 +359,7 @@ int LoadInput()
         ver.t[0] = 0.0f;
         ver.t[1] = 0.0f;
 
-        myObject.vertices.push_back( ver );
+        myObject.vertices.push_back(ver);
     }
 
     Face face;
@@ -365,7 +390,7 @@ bool CreateRenderData()
         render_ver_nor_tex.clear();
         render_f.clear();
 
-        for (int i = 0; i < myObject.vertices.size(); ++i) 
+        for (int i = 0; i < myObject.vertices.size(); ++i)
         {
 
             render_ver_nor_tex.push_back(myObject.vertices[i].v[0]);
@@ -380,22 +405,19 @@ bool CreateRenderData()
             render_ver_nor_tex.push_back(myObject.vertices[i].t[1]);
         }
 
-        for (int j = 0; j < myObject.faces.size(); ++j) 
+        for (int j = 0; j < myObject.faces.size(); ++j)
         {
-            render_f.push_back(myObject.faces[j].v1 );
-            render_f.push_back(myObject.faces[j].v2 );
-            render_f.push_back(myObject.faces[j].v3 );
+            render_f.push_back(myObject.faces[j].v1);
+            render_f.push_back(myObject.faces[j].v2);
+            render_f.push_back(myObject.faces[j].v3);
         }
 
         return true;
     }
 }
 
-
-
-
 ///=========================================================================================///
-///                            Functions for Manipulating 3D Model  
+///                            Functions for Manipulating 3D Model
 ///=========================================================================================///
 
 void RotateModel(float angle, glm::vec3 axis)
@@ -430,9 +452,6 @@ void ScaleModel(float scale)
     modelMatrix = scaleMatrix * modelMatrix;
 }
 
-
-
-
 ///=========================================================================================///
 ///                                    Callback Functions
 ///=========================================================================================///
@@ -445,24 +464,22 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
 
     glViewport(0, 0, width, height);
 
-    winWidth  = width;
+    winWidth = width;
     winHeight = height;
 }
 
-
 // glfw: whenever a key is pressed, this callback is called
 // ----------------------------------------------------------------------
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
     {
@@ -484,7 +501,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         glBindVertexArray(VAO);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferData(GL_ARRAY_BUFFER, render_ver_nor_tex.size() * sizeof(float), &render_ver_nor_tex[0], GL_STATIC_DRAW);
-
     }
 
     if (key == GLFW_KEY_P && action == GLFW_PRESS)
@@ -499,8 +515,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     }
 }
 
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
@@ -512,16 +527,14 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     }
 }
 
-
 // glfw: whenever the cursor moves, this callback is called
 // -------------------------------------------------------
-void cursor_pos_callback(GLFWwindow* window, double mouseX, double mouseY)
+void cursor_pos_callback(GLFWwindow *window, double mouseX, double mouseY)
 {
-    float  dx, dy;
-    float  nx, ny, scale, angle;
+    float dx, dy;
+    float nx, ny, scale, angle;
 
-
-    if ( leftMouseButtonHold )
+    if (leftMouseButtonHold)
     {
         if (isFirstMouse)
         {
@@ -532,36 +545,36 @@ void cursor_pos_callback(GLFWwindow* window, double mouseX, double mouseY)
 
         else
         {
-            if( glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS )
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
             {
-                float dx =         _TRANS_FACTOR * (mouseX - prevMouseX);
+                float dx = _TRANS_FACTOR * (mouseX - prevMouseX);
                 float dy = -1.0f * _TRANS_FACTOR * (mouseY - prevMouseY); // reversed since y-coordinates go from bottom to top
 
                 prevMouseX = mouseX;
                 prevMouseY = mouseY;
 
-                TranslateModel( glm::vec3(dx, dy, 0) );
+                TranslateModel(glm::vec3(dx, dy, 0));
             }
 
             else
             {
-                float dx =   mouseX - prevMouseX;
+                float dx = mouseX - prevMouseX;
                 float dy = -(mouseY - prevMouseY); // reversed since y-coordinates go from bottom to top
 
                 prevMouseX = mouseX;
                 prevMouseY = mouseY;
 
                 // Rotation
-                nx    = -dy;
-                ny    =  dx;
-                scale = sqrt(nx*nx + ny*ny);
+                nx = -dy;
+                ny = dx;
+                scale = sqrt(nx * nx + ny * ny);
 
                 // We use "ArcBall Rotation" to compute the rotation axis and angle based on the mouse motion
-                nx    = nx / scale;
-                ny    = ny / scale;
+                nx = nx / scale;
+                ny = ny / scale;
                 angle = scale * _ROTATE_FACTOR;
 
-                RotateModel( angle, glm::vec3(nx, ny, 0.0f) );
+                RotateModel(angle, glm::vec3(nx, ny, 0.0f));
             }
         }
     }
@@ -572,26 +585,32 @@ void cursor_pos_callback(GLFWwindow* window, double mouseX, double mouseY)
     }
 }
 
-
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+void scroll_callback(GLFWwindow *window, double xOffset, double yOffset)
 {
     float scale = 1.0f + _SCALE_FACTOR * yOffset;
 
-    ScaleModel( scale );
+    ScaleModel(scale);
 }
-
-
-
-
 
 ///=========================================================================================///
 ///                                      Main Function
 ///=========================================================================================///
 
-int main()
+int main(int argc, char *argv[])
 {
+    char* textureFilename;
+    if (argc > 1)
+    {
+        textureFilename = argv[1];
+    }
+    else
+    {
+        cout << "Please input a texture filename!" << endl;
+        return 1;
+    }
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -605,7 +624,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(winWidth, winHeight, "Assignment 3", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, "[James Raphael Tiovalen] Assignment 3", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -635,9 +654,8 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // construct the shaders
-    //shader
     shader myShader;
-    myShader.setUpShader(vertexShaderSource,fragmentShaderSource);
+    myShader.setUpShader(vertexShaderSource, fragmentShaderSource);
 
     LoadInput();
 
@@ -658,15 +676,15 @@ int main()
 
     // set the vertex attribute pointers
     // vertex Positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
     glEnableVertexAttribArray(0);
 
     // vertex normals
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), ((void*)(3* sizeof(float))));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), ((void *)(3 * sizeof(float))));
     glEnableVertexAttribArray(1);
 
     // vertex texture coordinate
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
@@ -676,9 +694,9 @@ int main()
     unsigned int texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture); // all upcoming GL_TEXTURE_2D operations now have effect on this texture object
-    
+
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // set texture wrapping to GL_REPEAT (default wrapping method)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // set texture filtering parameters
@@ -687,7 +705,7 @@ int main()
 
     // load image, create texture and generate mipmaps
     int width, height, nrChannels;
-    unsigned char *data = stbi_load("../data/texture.png", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load(textureFilename, &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -722,7 +740,7 @@ int main()
         glUniformMatrix4fv(glGetUniformLocation(myShader.ID, "view"), 1, GL_FALSE, &view[0][0]);
 
         // render the loaded model
-        glm::vec3 aColor = glm::vec3 (0.9f, 0.9f, 0.9f);
+        glm::vec3 aColor = glm::vec3(0.9f, 0.9f, 0.9f);
 
         glUniformMatrix4fv(glGetUniformLocation(myShader.ID, "model"), 1, GL_FALSE, &modelMatrix[0][0]);
         glUniform3fv(glGetUniformLocation(myShader.ID, "aColor"), 1, &aColor[0]);
@@ -754,4 +772,3 @@ int main()
     glfwTerminate();
     return 0;
 }
-
