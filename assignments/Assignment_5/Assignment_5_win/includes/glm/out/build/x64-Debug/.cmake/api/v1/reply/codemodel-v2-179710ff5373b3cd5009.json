@@ -1,0 +1,64 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "Project",
+					"targetIndexes" : 
+					[
+						0,
+						1
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "glm_shared::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-glm_shared-Debug-1454a03ca27f3fec53dd.json",
+					"name" : "glm_shared",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "glm_static::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-glm_static-Debug-22517a16a298c721df3f.json",
+					"name" : "glm_static",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "C:/Users/yingjie/Desktop/Assignment_5/Assignment_1_example/Assignment_1_solution/Assignment_1_win/includes/glm/out/build/x64-Debug",
+		"source" : "C:/Users/yingjie/Desktop/Assignment_5/Assignment_1_example/Assignment_1_solution/Assignment_1_win/includes/glm"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 2
+	}
+}
