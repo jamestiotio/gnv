@@ -6,7 +6,8 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-class shader {
+class shader
+{
 
 public:
     unsigned int ID;
@@ -18,7 +19,7 @@ public:
         glUseProgram(ID);
     }
 
-    void setUpShader(const char* vertexShaderSource, const char* fragmentShaderSource)
+    void setUpShader(const char *vertexShaderSource, const char *fragmentShaderSource)
     {
         // build and compile our shader program
         // ------------------------------------
@@ -33,7 +34,8 @@ public:
         if (!success)
         {
             glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
         }
         // fragment shader
         unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -44,9 +46,9 @@ public:
         if (!success)
         {
             glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
         }
-
 
         // link shaders
         ID = glCreateProgram();
@@ -55,15 +57,17 @@ public:
         glLinkProgram(ID);
         // check for linking errors
         glGetProgramiv(ID, GL_LINK_STATUS, &success);
-        if (!success) {
+        if (!success)
+        {
             glGetProgramInfoLog(ID, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+                      << infoLog << std::endl;
         }
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
     }
 
-    void setUpShader(const char* vertexShaderSource, const char* fragmentShaderSource, const char* geometryShaderSource)
+    void setUpShader(const char *vertexShaderSource, const char *fragmentShaderSource, const char *geometryShaderSource)
     {
         // build and compile our shader program
         // ------------------------------------
@@ -78,7 +82,8 @@ public:
         if (!success)
         {
             glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
         }
         // fragment shader
         unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -89,24 +94,27 @@ public:
         if (!success)
         {
             glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n"
+                      << infoLog << std::endl;
         }
 
         // geometry shader
         unsigned int geometry;
 
-        const char * gShaderCode = geometryShaderSource;
+        const char *gShaderCode = geometryShaderSource;
         geometry = glCreateShader(GL_GEOMETRY_SHADER);
         glShaderSource(geometry, 1, &gShaderCode, NULL);
         glCompileShader(geometry);
         // check for geometry compile errors
         glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
-        if(!success)
+        if (!success)
         {
             glGetShaderInfoLog(geometry, 1024, NULL, infoLog);
-            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << "GEOMETRY" << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
+            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: "
+                      << "GEOMETRY"
+                      << "\n"
+                      << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
-
 
         // link shaders
         ID = glCreateProgram();
@@ -116,18 +124,16 @@ public:
         glLinkProgram(ID);
         // check for linking errors
         glGetProgramiv(ID, GL_LINK_STATUS, &success);
-        if (!success) {
+        if (!success)
+        {
             glGetProgramInfoLog(ID, 512, NULL, infoLog);
-            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
+            std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+                      << infoLog << std::endl;
         }
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         glDeleteShader(geometry);
-
     }
-
-
 };
 
-
-#endif //ASSIGNMENT_0_SHADER_H
+#endif // ASSIGNMENT_0_SHADER_H

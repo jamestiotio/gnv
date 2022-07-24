@@ -6,7 +6,6 @@
 ///
 ////////////////////////////////////////
 
-
 #ifndef LMSOLVER_H
 #define LMSOLVER_H
 
@@ -19,20 +18,20 @@ using namespace Eigen;
 struct LMSlover
 {
     int linksNum;
-    vector<Vector2i>    jointPairLinkID;
-    vector<Vector2d>    jointPairLocalPos1;
-    vector<Vector2d>    jointPairLocalPos2;
+    vector<Vector2i> jointPairLinkID;
+    vector<Vector2d> jointPairLocalPos1;
+    vector<Vector2d> jointPairLocalPos2;
 
-    vector<Vector2i>    sliderPairLinkID;
-    vector<Vector2d>    sliderPairLocalPos1;
-    vector<Vector2d>    sliderPairLocalPos2;
-    vector<Vector2d>    sliderPairLocalPos3;
+    vector<Vector2i> sliderPairLinkID;
+    vector<Vector2d> sliderPairLocalPos1;
+    vector<Vector2d> sliderPairLocalPos2;
+    vector<Vector2d> sliderPairLocalPos3;
 
     int groundLinkID;
     int driverLinkID;
 
-    vector<double>      initRotateAngle;
-    vector<Vector2d>    initTransPosition;
+    vector<double> initRotateAngle;
+    vector<Vector2d> initTransPosition;
 
     double driverAngle;
 
@@ -63,5 +62,4 @@ struct LMSlover
     vector<double> sliderConstraints(const VectorXd &x) const;
 };
 
-
-#endif //LMSOLVER_H
+#endif // LMSOLVER_H

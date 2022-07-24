@@ -27,35 +27,31 @@
 using namespace std;
 using namespace Eigen;
 
+#define MAX_BUFFER_SIZE 1024
 
-#define MAX_BUFFER_SIZE            1024
+#define _ROTATE_FACTOR 0.005f
+#define _SCALE_FACTOR 0.01f
+#define _TRANS_FACTOR 0.02f
 
-#define _ROTATE_FACTOR              0.005f
-#define _SCALE_FACTOR               0.01f
-#define _TRANS_FACTOR               0.02f
-
-#define _Z_NEAR                     0.001f
-#define _Z_FAR                      100.0f
-
-
+#define _Z_NEAR 0.001f
+#define _Z_FAR 100.0f
 
 /***********************************************************************/
 /**************************   global variables   ***********************/
 /***********************************************************************/
 
-
 // Window size
-unsigned int winWidth  = 1200;
+unsigned int winWidth = 1200;
 unsigned int winHeight = 800;
 
 // Camera
-glm::vec3 camera_position = glm::vec3 (0.0f, 0.0f, 12.5f);
+glm::vec3 camera_position = glm::vec3(0.0f, 0.0f, 12.5f);
 glm::vec3 camera_target = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 camera_up = glm::vec3(0.0f, 1.0f, 0.0f);
-float camera_fovy = 45.0f;    
+float camera_fovy = 45.0f;
 glm::mat4 projection;
 
-// Mouse interaction 
+// Mouse interaction
 bool leftMouseButtonHold = false;
 bool isFirstMouse = true;
 float prevMouseX;
@@ -68,46 +64,42 @@ vector<glm::mat4> worldMatrixVec;
 bool isAnimation = false;
 static int animationInterval = 1;
 double preTimer = 0.0;
-int    curFrame = 1;
-bool   curveShow = true;
+int curFrame = 1;
+bool curveShow = true;
 
- // Mesh color table
+// Mesh color table
 glm::vec3 colorTable[13] =
- {
-    glm::vec3(0.8, 0.9, 0.8),
-    glm::vec3(0.75, 0.85, 0.95),
-    glm::vec3(0.75, 0.95, 0.85),
-    glm::vec3(0.85, 0.95, 0.75),
-    glm::vec3(0.85, 0.75, 0.95),
-    glm::vec3(0.95, 0.75, 0.85),
-    glm::vec3(0.95, 0.85, 0.75),
-    glm::vec3(0.9, 0.8, 0.8),
-    glm::vec3(0.8, 0.8, 0.9),
-    glm::vec3(0.9, 0.9, 0.8),
-    glm::vec3(0.9, 0.8, 0.9),
+    {
+        glm::vec3(0.8, 0.9, 0.8),
+        glm::vec3(0.75, 0.85, 0.95),
+        glm::vec3(0.75, 0.95, 0.85),
+        glm::vec3(0.85, 0.95, 0.75),
+        glm::vec3(0.85, 0.75, 0.95),
+        glm::vec3(0.95, 0.75, 0.85),
+        glm::vec3(0.95, 0.85, 0.75),
+        glm::vec3(0.9, 0.8, 0.8),
+        glm::vec3(0.8, 0.8, 0.9),
+        glm::vec3(0.9, 0.9, 0.8),
+        glm::vec3(0.9, 0.8, 0.9),
 
-    glm::vec3(0.99, 0.4, 0.7),
-    glm::vec3(0.85, 0.85, 0.85)
- };
+        glm::vec3(0.99, 0.4, 0.7),
+        glm::vec3(0.85, 0.85, 0.85)};
 
-
-//linkages mode
+// linkages mode
 int caseLinks = 1;
 int MaxLinkPartsNum = 30;
 double motionSpeed = 1.0;
 
 // declaration
 void processInput(GLFWwindow *window);
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
-
-
+void framebuffer_size_callback(GLFWwindow *window, int width, int height);
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods);
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods);
+void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos);
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 
 ///=========================================================================================///
-///                             Functions to Transform the Scene  
+///                             Functions to Transform the Scene
 ///=========================================================================================///
 
 void InitModelMatrix(int partsNum)
@@ -115,7 +107,7 @@ void InitModelMatrix(int partsNum)
     modelMatrixVec.clear();
     localMatrixVec.clear();
     worldMatrixVec.clear();
-    for(int i=0;i<partsNum;i++)
+    for (int i = 0; i < partsNum; i++)
     {
         modelMatrixVec.push_back(glm::mat4(1.0f));
         localMatrixVec.push_back(glm::mat4(1.0f));
@@ -125,7 +117,7 @@ void InitModelMatrix(int partsNum)
 
 void RotateModel(float angle, glm::vec3 axis)
 {
-    for(auto &modelMatrix : modelMatrixVec)
+    for (auto &modelMatrix : modelMatrixVec)
     {
         glm::vec3 rotateCenter = glm::vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
 
@@ -140,7 +132,7 @@ void RotateModel(float angle, glm::vec3 axis)
 
 void TranslateModel(glm::vec3 transVec)
 {
-    for(auto &modelMatrix : modelMatrixVec)
+    for (auto &modelMatrix : modelMatrixVec)
     {
         glm::mat4 translateMatrix = glm::mat4(1.0f);
         translateMatrix = glm::translate(translateMatrix, transVec);
@@ -151,7 +143,7 @@ void TranslateModel(glm::vec3 transVec)
 
 void ScaleModel(float scale)
 {
-    for(auto &modelMatrix : modelMatrixVec)
+    for (auto &modelMatrix : modelMatrixVec)
     {
         glm::vec3 scaleCenter = glm::vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
 
@@ -163,9 +155,6 @@ void ScaleModel(float scale)
         modelMatrix = scaleMatrix * modelMatrix;
     }
 }
-
-
-
 
 ///=========================================================================================///
 ///                                    Callback Functions
@@ -179,26 +168,24 @@ void processInput(GLFWwindow *window)
         glfwSetWindowShouldClose(window, true);
 }
 
-
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
 
     glViewport(0, 0, width, height);
 
-    winWidth  = width;
+    winWidth = width;
     winHeight = height;
 }
-
 
 // glfw: whenever a key is pressed, this callback is called
 // press 'SPACE" for animation
 // press '0'-'6' for diff types of linkages
 // ----------------------------------------------------------------------
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
@@ -233,18 +220,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
     if (key == GLFW_KEY_D && action == GLFW_PRESS)
     {
-        if(abs(motionSpeed) < 20)
+        if (abs(motionSpeed) < 20)
         {
             motionSpeed = motionSpeed * 1.1;
-            printf("motionSpeed; %.3f \n", motionSpeed);
+            printf("motionSpeed: %.3f\n", motionSpeed);
         }
     }
     if (key == GLFW_KEY_A && action == GLFW_PRESS)
     {
-        if(abs(motionSpeed) > 0.02)
+        if (abs(motionSpeed) > 0.02)
         {
             motionSpeed = motionSpeed / 1.1;
-            printf("motionSpeed; %.3f \n", motionSpeed);
+            printf("motionSpeed: %.3f\n", motionSpeed);
         }
     }
 
@@ -252,91 +239,84 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         curveShow = !curveShow;
 }
 
-
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+void mouse_button_callback(GLFWwindow *window, int button, int action, int mods)
 {
-	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
     {
         leftMouseButtonHold = true;
     }
     else
     {
-    	leftMouseButtonHold = false;
+        leftMouseButtonHold = false;
     }
 }
 
-
 // glfw: whenever the cursor moves, this callback is called
 // -------------------------------------------------------
-void cursor_pos_callback(GLFWwindow* window, double mouseX, double mouseY)
+void cursor_pos_callback(GLFWwindow *window, double mouseX, double mouseY)
 {
-	float  dx, dy;
-	float  nx, ny, scale, angle;
-    
+    float dx, dy;
+    float nx, ny, scale, angle;
 
-	if ( leftMouseButtonHold )
-	{
-		if (isFirstMouse)
-	    {
-	        prevMouseX = mouseX;
-	        prevMouseY = mouseY;
-	        isFirstMouse = false;
-	    }
+    if (leftMouseButtonHold)
+    {
+        if (isFirstMouse)
+        {
+            prevMouseX = mouseX;
+            prevMouseY = mouseY;
+            isFirstMouse = false;
+        }
 
-	    else
-	    {
-            if( glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS )
+        else
+        {
+            if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
             {
-                float dx =         _TRANS_FACTOR * (mouseX - prevMouseX);
+                float dx = _TRANS_FACTOR * (mouseX - prevMouseX);
                 float dy = -1.0f * _TRANS_FACTOR * (mouseY - prevMouseY); // reversed since y-coordinates go from bottom to top
 
                 prevMouseX = mouseX;
                 prevMouseY = mouseY;
 
-                TranslateModel( glm::vec3(dx, dy, 0) );  
+                TranslateModel(glm::vec3(dx, dy, 0));
             }
 
             else
             {
-                float dx =   mouseX - prevMouseX;
+                float dx = mouseX - prevMouseX;
                 float dy = -(mouseY - prevMouseY); // reversed since y-coordinates go from bottom to top
 
                 prevMouseX = mouseX;
                 prevMouseY = mouseY;
 
-               // Rotation
-                nx    = -dy;
-                ny    =  dx;
-                scale = sqrt(nx*nx + ny*ny);
+                // Rotation
+                nx = -dy;
+                ny = dx;
+                scale = sqrt(nx * nx + ny * ny);
 
                 // We use "ArcBall Rotation" to compute the rotation axis and angle based on the mouse motion
-                nx    = nx / scale;
-                ny    = ny / scale;
+                nx = nx / scale;
+                ny = ny / scale;
                 angle = scale * _ROTATE_FACTOR;
 
-                RotateModel( angle, glm::vec3(nx, ny, 0.0f) );
+                RotateModel(angle, glm::vec3(nx, ny, 0.0f));
             }
-	    }  
-	}  
+        }
+    }
 
-	else
-	{
-		isFirstMouse = true;
-	}
+    else
+    {
+        isFirstMouse = true;
+    }
 }
-
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xOffset, double yOffset)
+void scroll_callback(GLFWwindow *window, double xOffset, double yOffset)
 {
-	float scale = 1.0f + _SCALE_FACTOR * yOffset;
+    float scale = 1.0f + _SCALE_FACTOR * yOffset;
 
-	ScaleModel( scale ); 
+    ScaleModel(scale);
 }
-
-
-
 
 ///=========================================================================================///
 ///                                      Main Function
@@ -357,7 +337,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(winWidth, winHeight, "Assignment 5 - Linkage Design", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(winWidth, winHeight, "[James Raphael Tiovalen] Assignment 5 - Linkage Design", NULL, NULL);
     if (window == NULL)
     {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -391,16 +371,16 @@ int main()
     // ------------------------------------
     // vertex shader
     shader myShader;
-    myShader.setUpShader(vertexShaderSource,fragmentShaderSource);
+    myShader.setUpShader(vertexShaderSource, fragmentShaderSource);
 
-    //linkages initialization
+    // linkages initialization
     auto _links = new Linkages();
 
     // Load input mesh data
-    vector<vector<float>> verList;          // This is the list of vertices and normals for rendering
-    vector<vector<unsigned>> triList;       // This is the list of faces for rendering
+    vector<vector<float>> verList;    // This is the list of vertices and normals for rendering
+    vector<vector<unsigned>> triList; // This is the list of faces for rendering
 
-    ReInitial :
+ReInitial:
     _links->motionSpeed = motionSpeed;
     _links->InitLinkages(caseLinks, verList, triList);
 
@@ -415,7 +395,7 @@ int main()
     glGenBuffers(sceneObjNum, VBO);
     glGenBuffers(sceneObjNum, EBO);
 
-    for(int i=0;i<sceneObjNum;i++)
+    for (int i = 0; i < sceneObjNum; i++)
     {
         glBindVertexArray(VAO[i]);
 
@@ -428,19 +408,18 @@ int main()
 
         // set the vertex attribute pointers
         // vertex Positions
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *) 0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(0);
 
         // vertex normals
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), ((void *) (3 * sizeof(float))));
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), ((void *)(3 * sizeof(float))));
         glEnableVertexAttribArray(1);
 
         glBindVertexArray(0);
     }
- 
-    // as we only have a single shader, we could also just activate our shader once beforehand if we want to 
-    myShader.use();
 
+    // as we only have a single shader, we could also just activate our shader once beforehand if we want to
+    myShader.use();
 
     // render loop
     // -----------
@@ -464,7 +443,7 @@ int main()
         glUniform3fv(glGetUniformLocation(myShader.ID, "viewPos"), 1, &camera_position[0]);
 
         // switch diff types of linkages
-        if(caseLinks != _links->linksCase)
+        if (caseLinks != _links->linksCase)
         {
             glDeleteVertexArrays(sceneObjNum, VAO);
             glDeleteBuffers(sceneObjNum, VBO);
@@ -472,12 +451,12 @@ int main()
             goto ReInitial;
         }
         // update linkages local Matrix in animation
-        if(isAnimation)
+        if (isAnimation)
         {
-            if(abs(_links->motionSpeed) != motionSpeed)
+            if (abs(_links->motionSpeed) != motionSpeed)
             {
-                double dire = _links->motionSpeed/abs(_links->motionSpeed);
-                _links->motionSpeed = motionSpeed*dire;
+                double dire = _links->motionSpeed / abs(_links->motionSpeed);
+                _links->motionSpeed = motionSpeed * dire;
             }
             _links->InputDriverAngle(curFrame);
             _links->SolveLinkages();
@@ -485,26 +464,26 @@ int main()
             curFrame++;
         }
 
-        //render each link
-        for(int i=0;i<_links->linksNum + _links->rJointNum;i++)
+        // render each link
+        for (int i = 0; i < _links->linksNum + _links->rJointNum; i++)
         {
-            worldMatrixVec[i] = modelMatrixVec[i]*localMatrixVec[i];
+            worldMatrixVec[i] = modelMatrixVec[i] * localMatrixVec[i];
             glUniformMatrix4fv(glGetUniformLocation(myShader.ID, "model"), 1, GL_FALSE, &worldMatrixVec[i][0][0]);
 
-            if(i == _links->groundLinkID || i >= _links->linksNum)
+            if (i == _links->groundLinkID || i >= _links->linksNum)
                 glUniform3fv(glGetUniformLocation(myShader.ID, "meshColor"), 1, &colorTable[12][0]);
             else
-                glUniform3fv(glGetUniformLocation(myShader.ID, "meshColor"), 1, &colorTable[i%11][0]);
+                glUniform3fv(glGetUniformLocation(myShader.ID, "meshColor"), 1, &colorTable[i % 11][0]);
 
             // render the triangle
             glBindVertexArray(VAO[i]);
             glDrawElements(GL_TRIANGLES, triList[i].size(), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
         }
-        if(curveShow)
+        if (curveShow)
         {
             int i = _links->linksNum + _links->rJointNum;
-            worldMatrixVec[i] = modelMatrixVec[i]*localMatrixVec[i];
+            worldMatrixVec[i] = modelMatrixVec[i] * localMatrixVec[i];
             glUniformMatrix4fv(glGetUniformLocation(myShader.ID, "model"), 1, GL_FALSE, &worldMatrixVec[i][0][0]);
             glUniform3fv(glGetUniformLocation(myShader.ID, "meshColor"), 1, &colorTable[11][0]);
             glBindVertexArray(VAO[i]);
@@ -529,4 +508,3 @@ int main()
     glfwTerminate();
     return 0;
 }
-

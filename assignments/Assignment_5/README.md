@@ -22,3 +22,26 @@ make
 ```
 
 ## Demo and Description of Features
+
+All four different 4-bar linkages are implemented in this assignment:
+
+1. Crank-Rocker
+2. Drag-Link
+3. Hoecken
+4. Double-Rocker
+
+### Crank-Rocker Linkage
+
+![Crank-Rocker](./assets/crank_rocker.gif)
+
+### Drag-Link Mechanism
+
+![Drag-Link](./assets/drag_link.gif)
+
+### Hoecken Linkage
+
+![Hoecken](./assets/hoecken.gif)
+
+### Double-Rocker Mechanism
+
+![Double-Rocker](./assets/double_rocker.gif)

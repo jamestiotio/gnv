@@ -9,55 +9,55 @@
 using namespace std;
 using namespace Eigen;
 
-class Linkages{
+class Linkages
+{
 public:
     Linkages();
     ~Linkages();
 
 public:
-    int     linksCase;  // type of linkages
-    int     linksNum;   // number of links/parts
+    int linksCase; // type of linkages
+    int linksNum;  // number of links/parts
 
-    vector<vector<Vector3d>> verListVec;    // store link mesh vert
-    vector<vector<Vector3d>> norListVec;    // store link mesh normal
-    vector<vector<Vector3i>> triListVec;    // store link mesh triangle
+    vector<vector<Vector3d>> verListVec; // store link mesh vert
+    vector<vector<Vector3d>> norListVec; // store link mesh normal
+    vector<vector<Vector3i>> triListVec; // store link mesh triangle
 
-    double motionSpeed; //motion Speed
+    double motionSpeed; // motion Speed
 
     // local affine matrix for a link is: [R(rotateAngle,rotateAxis),transPosition; 0,0,0,1]
-    Vector3d            rotateAxis;
-    vector<double>      rotateAngle;
-    vector<Vector2d>    transPosition;
+    Vector3d rotateAxis;
+    vector<double> rotateAngle;
+    vector<Vector2d> transPosition;
 
     int groundLinkID;
     int driverLinkID;
     double driverAngle;
 
-    int                 rJointNum;
-    vector<Vector2i>    jointPairLinkID;        // <i,j> is a R joint
-    vector<Vector2d>    jointPairLocalPos1;     // joint local pos P_i in link L_i
-    vector<Vector2d>    jointPairLocalPos2;     // joint local pos P_j in link L_j
+    int rJointNum;
+    vector<Vector2i> jointPairLinkID;    // <i,j> is a R joint
+    vector<Vector2d> jointPairLocalPos1; // joint local pos P_i in link L_i
+    vector<Vector2d> jointPairLocalPos2; // joint local pos P_j in link L_j
 
-    int         particleLinkID;                 // the link_ID of the link that end-effector point is on
-    Vector3d    particleLinkPos;                // the local pos of the end-effector
-    vector<Vector3d> particleCurve;             // output curve
-    vector<float> particleList;                 // output curve save as a List
+    int particleLinkID;             // the link_ID of the link that end-effector point is on
+    Vector3d particleLinkPos;       // the local pos of the end-effector
+    vector<Vector3d> particleCurve; // output curve
+    vector<float> particleList;     // output curve save as a List
 
-    LMSlover lmSlover;                          //  solver
-    VectorXd lm_x;                              //  parameters of solver
+    LMSlover lmSlover; //  solver
+    VectorXd lm_x;     //  parameters of solver
 
 private:
-    int circleFrames;                           // frame = 720, for a whole motion
-    vector<double> depth;                       // depth for each link
-    vector<Vector3d> tangentPitchCurve;         // tangent of Curve
-    vector<Vector3d> normalPitchCurve;          // normals of Curve
-
+    int circleFrames;                   // frame = 720, for a whole motion
+    vector<double> depth;               // depth for each link
+    vector<Vector3d> tangentPitchCurve; // tangent of Curve
+    vector<Vector3d> normalPitchCurve;  // normals of Curve
 
 public:
     // Initialize Linkage
-    void InitLinkages(int caseID, vector<vector<float>> &verList, vector<vector<unsigned >> &triList);
+    void InitLinkages(int caseID, vector<vector<float>> &verList, vector<vector<unsigned>> &triList);
     void CrankRocker(double width, double thickness, Matrix4d &depthM);
-    void DragLink(double width, double thickness, Matrix4d &depthM);    
+    void DragLink(double width, double thickness, Matrix4d &depthM);
     void DoubleRocker(double width, double thickness, Matrix4d &depthM);
     void Hoecken(double width, double thickness, Matrix4d &depthM);
 
@@ -88,5 +88,4 @@ private:
     void CreateCurveMesh(vector<Vector3d> &verList, vector<Vector3d> &norList, vector<Vector3i> &triList, double rTube);
 };
 
-
-#endif //MAIN_CPP_LINKAGES_H
+#endif // MAIN_CPP_LINKAGES_H
